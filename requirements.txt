@@ -1,4 +1,5 @@
 mlx-whisper
+parakeet-mlx
 ffmpeg-python
 transformers
 sentencepiece

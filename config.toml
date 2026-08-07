@@ -2,8 +2,24 @@
 # 値を省略した場合は config.py のデフォルト値が使われる
 
 [models]
-# 音声認識モデル（mlx-whisper）
+# 音声認識エンジン（"parakeet" | "whisper"）
+# "whisper" にすると parakeet-mlx 導入前の挙動（常に mlx-whisper を使用）に戻る
+asr_engine = "parakeet"
+
+# 音声認識モデル（mlx-whisper。asr_engine="whisper" のとき、または
+# asr_engine="parakeet" で Parakeet 非対応言語・言語未指定のときに使用）
 whisper = "mlx-community/whisper-large-v3-mlx"
+
+# 音声認識モデル（parakeet-mlx。asr_engine="parakeet" のとき、
+# 対応言語(欧州25言語)を明示指定した場合に使用）
+parakeet = "mlx-community/parakeet-tdt-0.6b-v3"
+
+# Parakeet が対応する言語（ISO 639-1）。日本語・中国語・韓国語は非対応のため
+# 常に mlx-whisper にフォールバックする
+parakeet_languages = [
+    "bg", "cs", "da", "de", "el", "en", "es", "et", "fi", "fr", "hr", "hu", "it",
+    "lt", "lv", "mt", "nl", "pl", "pt", "ro", "ru", "sk", "sl", "sv", "uk",
+]
 
 # 英語への翻訳モデル（言語別モデルが無い場合のフォールバック）
 translation_multilingual = "Helsinki-NLP/opus-mt-mul-en"

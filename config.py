@@ -7,6 +7,14 @@ _CONFIG_PATH = Path(__file__).parent / "config.toml"
 _DEFAULTS = {
     "models": {
         "whisper": "mlx-community/whisper-large-v3-mlx",
+        # 音声認識エンジンの選択("parakeet" | "whisper")
+        "asr_engine": "parakeet",
+        "parakeet": "mlx-community/parakeet-tdt-0.6b-v3",
+        # Parakeet が対応する言語(ISO 639-1)。日本語・中国語・韓国語は非対応
+        "parakeet_languages": [
+            "bg", "cs", "da", "de", "el", "en", "es", "et", "fi", "fr", "hr", "hu", "it",
+            "lt", "lv", "mt", "nl", "pl", "pt", "ro", "ru", "sk", "sl", "sv", "uk",
+        ],
         "translation_multilingual": "Helsinki-NLP/opus-mt-mul-en",
         "translation_nllb": "facebook/nllb-200-distilled-600M",
         # 英語への翻訳で言語別モデルを優先する言語（ISO 639-1）
