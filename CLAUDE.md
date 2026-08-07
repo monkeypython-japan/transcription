@@ -16,6 +16,19 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - マージに先立ち、ブランチの変更内容に仕様の変更（挙動・数値・UI・AIロジック）が含まれる場合は `whisperai-spec.md` に反映してから main へマージする。
 - origin へのプッシュに先立ち、変更内容を `README.md` に反映してからプッシュする。
 
+## 統括プロジェクト（video-translation）へエスカレーションする条件
+
+本プロジェクトは映像翻訳システムのサブプロジェクトで、`subtitle-translation` が
+出力 SRT を `<ROOT>/<name>/source.en.srt` として消費する。その**契約の正本**は
+`video-translation/docs/spec/contracts.md`（言語は常に `en` を明示指定する等）。
+
+**次の4つに当たるときだけ統括に上げる。当たらない限り、規模が大きくても自分で進めてよい**（統括 ADR-0009）。
+
+1. **出力 SRT の命名・形式・言語指定の扱いを変えたくなった**（共有ファイル契約に触れる）
+2. **他プロジェクト（subtitle-translation / japanese-dubbing）の作業が必要になった**
+3. **前提・方針が変わった**（プロジェクト横断で効くもの）
+4. **ユーザーの判断が要る**
+
 ## プロジェクト概要
 
 オフライン動画字幕生成 CLI ツール。動画ファイルを受け取り、SRT ファイルを出力する。
