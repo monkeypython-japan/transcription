@@ -1,4 +1,4 @@
-# whisperai
+# transcription
 
 動画ファイルからオフラインで SRT 字幕ファイルを生成する CLI ツール。  
 Apple Silicon（M シリーズ）の GPU を活用した高速な音声認識に対応しています。
@@ -33,7 +33,7 @@ pip install -r requirements.txt
 ## 使い方
 
 ```
-python whisperai.py "<動画ファイル|フォルダ>"... [言語コード] [オプション]
+python transcription.py "<動画ファイル|フォルダ>"... [言語コード] [オプション]
 ```
 
 | オプション | 説明 |
@@ -46,7 +46,7 @@ python whisperai.py "<動画ファイル|フォルダ>"... [言語コード] [�
 ### 字幕トラックなし（音声認識）
 
 ```bash
-python whisperai.py "<動画ファイル>"
+python transcription.py "<動画ファイル>"
 ```
 
 音声認識し、検出した言語の SRT を出力します。使用エンジンは言語に応じて自動的に振り分けられます（Parakeet 対応言語を明示指定 → Parakeet、それ以外（日本語など）や言語未指定 → Whisper。`config.toml` の `asr_engine` で常に Whisper に固定することも可能）。
@@ -54,7 +54,7 @@ python whisperai.py "<動画ファイル>"
 ### 字幕トラックの確認
 
 ```bash
-python whisperai.py "<動画ファイル>"
+python transcription.py "<動画ファイル>"
 ```
 
 字幕トラックがある場合はトラック一覧を表示して終了します。言語コードを指定して再実行してください。
@@ -62,7 +62,7 @@ python whisperai.py "<動画ファイル>"
 ### 字幕トラックをそのまま抽出
 
 ```bash
-python whisperai.py "<動画ファイル>" fr
+python transcription.py "<動画ファイル>" fr
 ```
 
 指定した言語コードの字幕トラックをそのまま SRT として出力します。
@@ -70,7 +70,7 @@ python whisperai.py "<動画ファイル>" fr
 ### 字幕トラックを英語に翻訳して抽出
 
 ```bash
-python whisperai.py "<動画ファイル>" fr --translate
+python transcription.py "<動画ファイル>" fr --translate
 ```
 
 指定した言語コードの字幕トラックを英語に翻訳した SRT を出力します。翻訳元言語の専用モデル（`opus-mt-fr-en` など）があれば優先的に使用し、無ければ多言語モデルにフォールバックします。
@@ -78,7 +78,7 @@ python whisperai.py "<動画ファイル>" fr --translate
 ### 字幕トラックを日本語などに翻訳して抽出
 
 ```bash
-python whisperai.py "<動画ファイル>" en --translate=ja
+python transcription.py "<動画ファイル>" en --translate=ja
 ```
 
 `--translate=<言語コード>` で翻訳先を指定できます（ja / de / fr / zh / ko など約 25 言語）。英語以外への翻訳には NLLB-200 モデル（約 2.4GB、初回のみダウンロード）を使用します。
@@ -86,8 +86,8 @@ python whisperai.py "<動画ファイル>" en --translate=ja
 ### 複数ファイル・フォルダの一括処理
 
 ```bash
-python whisperai.py "season1/" en --translate=ja
-python whisperai.py "ep1.mkv" "ep2.mkv" en
+python transcription.py "season1/" en --translate=ja
+python transcription.py "ep1.mkv" "ep2.mkv" en
 ```
 
 フォルダを指定するとサブフォルダも含めて動画ファイルを名前順に処理します。途中で失敗しても続行し、最後に成功数と失敗ファイル一覧を表示します。
@@ -95,7 +95,7 @@ python whisperai.py "ep1.mkv" "ep2.mkv" en
 ### 字幕トラックを無視して音声認識（--transcribe）
 
 ```bash
-python whisperai.py "<動画ファイル>" --transcribe
+python transcription.py "<動画ファイル>" --transcribe
 ```
 
 字幕トラックがあっても無視し、音声認識を強制実行します。字幕トラックが台詞以外の用途（テキストインサートや一部のみ）に使われている動画で使用します。
