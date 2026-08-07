@@ -31,19 +31,19 @@ EPILOG = """動作:
   {動画ファイルと同じフォルダ}/{ベース名}.{言語コード}.srt
 
 例:
-  whisperai.py "movie.mkv"
-  whisperai.py "movie.mkv" fr
-  whisperai.py "movie.mkv" fr --translate
-  whisperai.py "movie.mkv" fr --translate=ja
-  whisperai.py "movie.mkv" --transcribe
-  whisperai.py "season1/" en --translate=ja
-  whisperai.py "ep1.mkv" "ep2.mkv" en
+  transcription.py "movie.mkv"
+  transcription.py "movie.mkv" fr
+  transcription.py "movie.mkv" fr --translate
+  transcription.py "movie.mkv" fr --translate=ja
+  transcription.py "movie.mkv" --transcribe
+  transcription.py "season1/" en --translate=ja
+  transcription.py "ep1.mkv" "ep2.mkv" en
 """
 
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        prog="whisperai.py",
+        prog="transcription.py",
         description="動画ファイルからオフラインで SRT 字幕ファイルを生成する",
         epilog=EPILOG,
         formatter_class=argparse.RawDescriptionHelpFormatter,
@@ -115,7 +115,7 @@ def process_video(video_path: str, lang_code: str | None,
             # 言語コード未指定 → トラック一覧を表示するのみ
             print_tracks(tracks)
             print("\n言語コードを指定して再実行してください。")
-            print(f"  例: whisperai.py \"{video_path}\" en")
+            print(f"  例: transcription.py \"{video_path}\" en")
             return True
 
         # 指定言語のトラックを検索
@@ -128,7 +128,7 @@ def process_video(video_path: str, lang_code: str | None,
         if is_image_subtitle(track):
             print(f"エラー: トラック [{track['index']}] ({track['lang']}) は画像字幕（{track['codec']}）のため、テキストとして抽出できません。")
             print("音声認識で字幕を生成する場合は --transcribe を指定してください。")
-            print(f"  例: whisperai.py \"{video_path}\" --transcribe")
+            print(f"  例: transcription.py \"{video_path}\" --transcribe")
             return False
 
         print(f"字幕トラック [{track['index']}] ({track['lang']}) を抽出中 ", end="", flush=True)

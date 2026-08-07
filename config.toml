@@ -1,4 +1,4 @@
-# whisperai 設定ファイル
+# transcription 設定ファイル
 # 値を省略した場合は config.py のデフォルト値が使われる
 
 [models]

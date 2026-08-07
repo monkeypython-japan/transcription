@@ -13,7 +13,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - 曖昧な点はユーザーに質問する。
 - ブランチ上で変更を実施したら、ユーザーがテストを行う。
 - テスト完了後、Claude がコミットして main へマージする。
-- マージに先立ち、ブランチの変更内容に仕様の変更（挙動・数値・UI・AIロジック）が含まれる場合は `whisperai-spec.md` に反映してから main へマージする。
+- マージに先立ち、ブランチの変更内容に仕様の変更（挙動・数値・UI・AIロジック）が含まれる場合は `transcription-spec.md` に反映してから main へマージする。
 - origin へのプッシュに先立ち、変更内容を `README.md` に反映してからプッシュする。
 
 ## 統括プロジェクト（video-translation）へエスカレーションする条件
@@ -34,7 +34,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## プロジェクト概要
 
 オフライン動画字幕生成 CLI ツール。動画ファイルを受け取り、SRT ファイルを出力する。
-仕様（アーキテクチャ・動作・技術スタック）の正本は [`whisperai-spec.md`](whisperai-spec.md) を参照。
+仕様（アーキテクチャ・動作・技術スタック）の正本は [`transcription-spec.md`](transcription-spec.md) を参照。
 
 ## 開発コマンド
 
@@ -48,13 +48,13 @@ pip install -r requirements.txt
 source .venv/bin/activate
 
 # 実行例（字幕トラック一覧表示 / 字幕なし動画の音声認識）
-python whisperai.py "<動画ファイル>"
+python transcription.py "<動画ファイル>"
 
 # 実行例（字幕トラックをそのまま抽出）
-python whisperai.py "<動画ファイル>" fr
+python transcription.py "<動画ファイル>" fr
 
 # 実行例（字幕トラックを英語に翻訳して出力）
-python whisperai.py "<動画ファイル>" fr --translate
+python transcription.py "<動画ファイル>" fr --translate
 ```
 
 > パスに日本語やスペースが含まれる場合はダブルクォートで囲む。

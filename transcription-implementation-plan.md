@@ -1,4 +1,4 @@
-# whisperai 実装プラン
+# transcription 実装プラン
 
 ## フェーズ 1: プロジェクト基盤
 
@@ -10,7 +10,7 @@
 
 ## フェーズ 2: コア機能実装
 
-### 2-1. CLI エントリポイント (`whisperai.py`)
+### 2-1. CLI エントリポイント (`transcription.py`)
 - [ ] コマンドライン引数のパース（動画ファイル、オプションの言語コード）
 - [ ] ファイル存在チェック
 
@@ -25,7 +25,7 @@
 - [ ] SRT のタイムコードを保持したまま本文のみ翻訳
 
 ### 2-4. Whisper 音声認識 (`transcribe.py`)
-- [ ] モデルのキャッシュ確認・初回ダウンロード（`~/Library/Application Support/whisperai/`）
+- [ ] モデルのキャッシュ確認・初回ダウンロード（`~/Library/Application Support/transcription/`）
 - [ ] 動画から音声を抽出（ffmpeg）
 - [ ] Whisper large モデルで文字起こし（言語自動検出）
 - [ ] 認識結果を SRT 形式に変換
@@ -48,8 +48,8 @@
 ## モジュール構成（予定）
 
 ```
-whisperai/
-├── whisperai.py       # エントリポイント
+transcription/
+├── transcription.py   # エントリポイント
 ├── subtitle.py        # 字幕トラック検出・抽出
 ├── translate.py       # 字幕翻訳
 ├── transcribe.py      # Whisper 音声認識
