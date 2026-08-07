@@ -29,6 +29,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 3. **前提・方針が変わった**（プロジェクト横断で効くもの）
 4. **ユーザーの判断が要る**
 
+**回答は相談ノートの末尾に「統括の回答・発注」として追記される。** エスカレーション後にセッションを再開したら、**作業を始める前にまずそこを読む**（契約は統括が先に更新しているので `video-translation/docs/spec/contracts.md` の該当節も見る）。同じ相談を二度上げない。
+
 ## プロジェクト概要
 
 オフライン動画字幕生成 CLI ツール。動画ファイルを受け取り、SRT ファイルを出力する。
