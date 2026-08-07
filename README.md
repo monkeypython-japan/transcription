@@ -6,7 +6,8 @@ Apple Silicon（M シリーズ）の GPU を活用した高速な音声認識に
 ## 特徴
 
 - **完全オフライン** — 音声認識・字幕翻訳ともにインターネット不要
-- **Apple Silicon 最適化** — mlx-whisper により M シリーズ GPU をフル活用
+- **Apple Silicon 最適化** — M シリーズ GPU をフル活用
+- **音声認識エンジンのハイブリッド構成** — Parakeet（既定、欧州25言語対応、高速・ハルシネーションが少ない）と Whisper（多言語対応）を言語に応じて自動的に使い分け
 - **字幕トラック対応** — 動画に字幕トラックがある場合はそれを抽出・翻訳
 - **多言語翻訳** — 英語のほか、`--translate=ja` で日本語など約 25 言語への翻訳に対応
 - **一括処理** — 複数ファイル・フォルダ指定でまとめて処理
@@ -27,7 +28,7 @@ source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-初回実行時に音声認識モデル（`whisper-large-v3-mlx`、約 3GB）が Hugging Face から自動ダウンロードされます。
+初回実行時に音声認識モデルが Hugging Face から自動ダウンロードされます。既定では Parakeet（`parakeet-tdt-0.6b-v3`、約 2.3GB）が使われ、日本語など Parakeet 非対応言語や言語未指定時には Whisper（`whisper-large-v3-mlx`、約 3GB）が使われます（両モデルとも初回使用時のみダウンロード）。
 
 ## 使い方
 
@@ -38,7 +39,7 @@ python whisperai.py "<動画ファイル|フォルダ>"... [言語コード] [�
 | オプション | 説明 |
 |-----------|------|
 | `--translate[=言語]` | 字幕トラックを指定言語に翻訳して出力（省略時は英語。`--translate ja` のスペース区切りも可） |
-| `--transcribe` | 字幕トラックを無視して Whisper で音声認識を強制実行 |
+| `--transcribe` | 字幕トラックを無視して音声認識を強制実行（使用エンジンは言語に応じて自動振り分け） |
 | `--force` | 既存の SRT ファイルを確認せずに上書き（未指定なら上書き確認プロンプトを表示） |
 | `--help` | ヘルプを表示して終了 |
 
@@ -48,7 +49,7 @@ python whisperai.py "<動画ファイル|フォルダ>"... [言語コード] [�
 python whisperai.py "<動画ファイル>"
 ```
 
-Whisper で音声認識し、検出した言語の SRT を出力します。
+音声認識し、検出した言語の SRT を出力します。使用エンジンは言語に応じて自動的に振り分けられます（Parakeet 対応言語を明示指定 → Parakeet、それ以外（日本語など）や言語未指定 → Whisper。`config.toml` の `asr_engine` で常に Whisper に固定することも可能）。
 
 ### 字幕トラックの確認
 
@@ -97,7 +98,7 @@ python whisperai.py "ep1.mkv" "ep2.mkv" en
 python whisperai.py "<動画ファイル>" --transcribe
 ```
 
-字幕トラックがあっても無視し、Whisper で音声認識を強制実行します。字幕トラックが台詞以外の用途（テキストインサートや一部のみ）に使われている動画で使用します。
+字幕トラックがあっても無視し、音声認識を強制実行します。字幕トラックが台詞以外の用途（テキストインサートや一部のみ）に使われている動画で使用します。
 
 > パスに日本語やスペースが含まれる場合はダブルクォートで囲んでください。
 
@@ -116,7 +117,9 @@ python whisperai.py "<動画ファイル>" --transcribe
 
 ## 設定ファイル
 
-モデル名（音声認識・翻訳）とノイズフィルターのパターンは `config.toml` で変更できます。ファイルやキーが無い場合はデフォルト値で動作します。
+モデル名（音声認識・翻訳）、音声認識エンジンの切替（`asr_engine`）、ノイズフィルターのパターンは `config.toml` で変更できます。ファイルやキーが無い場合はデフォルト値で動作します。
+
+`asr_engine = "whisper"` にすると Parakeet 導入前の挙動（常に mlx-whisper を使用）に戻せます。
 
 ## テスト
 
@@ -128,7 +131,8 @@ python -m pytest tests/
 
 | 役割 | ライブラリ |
 |------|-----------|
-| 音声認識 | [mlx-whisper](https://github.com/ml-explore/mlx-examples)（Apple MLX） |
+| 音声認識（既定、欧州25言語） | [parakeet-mlx](https://github.com/senstella/parakeet-mlx)（Apple MLX） |
+| 音声認識（多言語フォールバック） | [mlx-whisper](https://github.com/ml-explore/mlx-examples)（Apple MLX） |
 | 字幕翻訳（英語向け） | Helsinki-NLP/opus-mt-mul-en（Hugging Face Transformers） |
 | 字幕翻訳（英語以外向け） | facebook/nllb-200-distilled-600M（Hugging Face Transformers） |
 | 動画処理 | ffmpeg / ffprobe |
