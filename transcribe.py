@@ -1,7 +1,19 @@
+import sys
+
 import config
 
 import asr_parakeet
 import asr_whisper
+
+
+def _log_actual_engine(actual_engine: str) -> None:
+    """実際に使用したエンジン名を標準エラー出力に1行出力する。
+
+    呼び出し元(subtitle-translation 等)がサブプロセスの標準エラー出力から
+    この行を拾い、ログに実際のエンジン名を反映するためのインターフェース。
+    標準出力(SRT本体・進捗表示)には一切影響しない。
+    """
+    print(f"[transcription] asr_engine={actual_engine}", file=sys.stderr, flush=True)
 
 
 def transcribe(video_path: str, language: str | None = None) -> tuple[str, str]:
@@ -24,18 +36,27 @@ def transcribe(video_path: str, language: str | None = None) -> tuple[str, str]:
       直接ロードや mel スペクトログラム計算などの非公開の内部処理を必要とし、
       結局 whisper 側の transcribe とほぼ同じコストがかかる)ため、言語未指定
       時は二度手間を避けて Whisper で通常認識しその結果をそのまま返す。
+
+    実際に使用したエンジン名を標準エラー出力に
+    `[transcription] asr_engine=parakeet` / `[transcription] asr_engine=whisper`
+    の形式で1行出力する(呼び出し元がログに実エンジン名を反映するためのインター
+    フェース。フォールバック後の実際の値であり engine 変数の値そのものではない)。
     """
     engine = config.get("models", "asr_engine")
 
     if engine == "whisper":
+        _log_actual_engine("whisper")
         return asr_whisper.transcribe(video_path, language=language)
 
     # engine == "parakeet"
     if language is not None:
         parakeet_languages = config.get("models", "parakeet_languages")
         if language in parakeet_languages:
+            _log_actual_engine("parakeet")
             return asr_parakeet.transcribe(video_path, language=language)
+        _log_actual_engine("whisper")
         return asr_whisper.transcribe(video_path, language=language)
 
     # 言語未指定: Whisper で通常認識し、その結果をそのまま返す
+    _log_actual_engine("whisper")
     return asr_whisper.transcribe(video_path, language=None)
