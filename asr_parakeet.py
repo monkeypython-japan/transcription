@@ -7,6 +7,11 @@ from asr_whisper import _segments_to_srt
 
 PARAKEET_MODEL = config.get("models", "parakeet")
 
+# チャンク分割時のオーバーラップ幅(秒)。長尺動画では chunk_duration=120秒で
+# 分割処理するため、チャンク境界をまたぐセリフがある(既定15秒では境界の
+# 突き合わせに失敗し丸ごと欠落することがある。詳細は ADR 0006)
+OVERLAP_DURATION = 30.0
+
 # 末尾句読点トークンの遅延許容(秒)。これを超える遅延がある場合、
 # セグメント終端の計算からそのトークンを除外する
 PUNCT_GAP_MAX = 1.0
@@ -157,12 +162,21 @@ def transcribe(video_path: str, language: str | None = None) -> tuple[str, str]:
     値をそのまま返す(呼び出し元で対応言語であることを確認済みの前提)。
     """
     import mlx.core as mx
+    from parakeet_mlx import Beam, DecodingConfig
 
     model = _get_model()
 
     print("音声認識中（Apple GPU 使用、Parakeet）", end="", flush=True)
-    # chunk_duration 未指定(既定 None)だと長尺動画で OOM するため必ず指定する
-    result = model.transcribe(video_path, chunk_duration=120.0, overlap_duration=15.0)
+    # chunk_duration 未指定(既定 None)だと長尺動画で OOM するため必ず指定する。
+    # decoding_config は既定の Greedy だとセリフ全体を丸ごと欠落させることが
+    # あるため Beam に変更(実測: 90分動画でWhisper比の欠落候補が42件→28件に
+    # 減少、処理時間は156秒→493秒。詳細は ADR 0006)
+    result = model.transcribe(
+        video_path,
+        chunk_duration=120.0,
+        overlap_duration=OVERLAP_DURATION,
+        decoding_config=DecodingConfig(decoding=Beam(beam_size=5)),
+    )
     tick()
 
     segments = _sentences_to_segments(result.sentences)

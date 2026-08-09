@@ -8,7 +8,7 @@ _DEFAULTS = {
     "models": {
         "whisper": "mlx-community/whisper-large-v3-mlx",
         # 音声認識エンジンの選択("parakeet" | "whisper")
-        "asr_engine": "parakeet",
+        "asr_engine": "whisper",
         "parakeet": "mlx-community/parakeet-tdt-0.6b-v3",
         # Parakeet が対応する言語(ISO 639-1)。日本語・中国語・韓国語は非対応
         "parakeet_languages": [

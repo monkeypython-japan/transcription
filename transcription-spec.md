@@ -2,7 +2,7 @@
 
 ## プロジェクトの目的
 
-動画の音声をオフラインで認識し、SRT ファイルとして書き出すソフトウェアを開発する。音声認識には mlx-whisper（Whisper large モデル）と Parakeet（parakeet-mlx）を設定で切り替えられるハイブリッド構成を採用する（既定は Parakeet。使い分けは「音声認識エンジン」を参照）。
+動画の音声をオフラインで認識し、SRT ファイルとして書き出すソフトウェアを開発する。音声認識には mlx-whisper（Whisper large モデル）と Parakeet（parakeet-mlx）を設定で切り替えられるハイブリッド構成を採用する（既定は Whisper。使い分けは「音声認識エンジン」を参照）。
 
 ## 実行方法
 
@@ -75,15 +75,17 @@ transcription.py <動画ファイル|フォルダ>... [言語コード] [オプ�
 
 ## 音声認識エンジン
 
-音声認識には Parakeet（parakeet-mlx）と Whisper（mlx-whisper）の2エンジンを使い分けるハイブリッド構成を採用する。エンジン選択は `config.toml` の `asr_engine`（既定 `"parakeet"`）で制御する。
+音声認識には Parakeet（parakeet-mlx）と Whisper（mlx-whisper）の2エンジンを使い分けるハイブリッド構成を採用する。エンジン選択は `config.toml` の `asr_engine`（既定 `"whisper"`）で制御する。
 
-- `asr_engine = "whisper"`: 常に Whisper を使用する
-- `asr_engine = "parakeet"`（既定）: 以下の振り分けに従う
+- `asr_engine = "whisper"`（既定）: 常に Whisper を使用する
+- `asr_engine = "parakeet"`: 以下の振り分けに従う
   - 言語コードを指定し、それが Parakeet 対応言語（欧州25言語、`parakeet_languages` で定義）に含まれる → Parakeet
   - 言語コードを指定したが Parakeet 非対応言語（日本語・中国語・韓国語等） → Whisper
   - 言語コード未指定 → Whisper（Parakeet に言語自動検出機能が無いため）
 
 Parakeet は Whisper と比べて無音区間でのハルシネーション（存在しない発話の捏造）が起きにくく、認識速度も速い一方、対応言語が欧州25言語に限られ言語自動検出も持たない。詳細な実測値・判断根拠は [[docs/decisions/0005-音声認識エンジンをparakeetへ切り替える.md|ADR 0005]] を参照。
+
+長尺の実コンテンツ（90分ドラマ）で比較したところ、セリフ欠落対策（[[docs/decisions/0006-parakeetのセリフ欠落対策としてbeam探索とoverlap拡大を導入.md|ADR 0006]]）を施した後の Parakeet でもなお Whisper よりセリフの欠落が多いことが実測された。精度（欠落の少なさ）を優先し、既定エンジンを Whisper に変更した。詳細な判断根拠は [[docs/decisions/0007-既定のasrエンジンをwhisperに戻す.md|ADR 0007]] を参照。
 
 音声認識を実行した際は、実際に使用したエンジン名（フォールバック後の実値）を標準エラー出力に `[transcription] asr_engine=parakeet` または `[transcription] asr_engine=whisper` の形式で1行出力する。標準出力（SRT本体・進捗表示）には影響しない。呼び出し元（subtitle-translation 等）がサブプロセスの標準エラー出力からこの行を読み取り、実際に使われたエンジン名をログに反映するためのインターフェース。
 
@@ -95,6 +97,7 @@ Parakeet は Whisper と比べて無音区間でのハルシネーション（�
   - Parakeet: `mlx-community/parakeet-tdt-0.6b-v3`（Apple MLX 最適化版、M シリーズ GPU 使用、約2.3GB）
 - Whisper 経路では `word_timestamps=True` を有効化し、単語単位のタイムスタンプで各セグメントの終端を精確に決定する（30秒チャンク境界へのスナップを防止）
 - Parakeet 経路ではトークン単位のタイムスタンプを使用する。文末の句読点のみのトークンが大きく遅延して出力される既知の問題があるため、直前の実トークン終端との差が閾値を超える場合はセグメント終端の計算から除外する補正を行う（詳細は ADR 0005）
+- Parakeet 経路の長尺動画向けチャンク分割（`chunk_duration=120秒`）は、既定の Greedy 探索とチャンク境界の結合処理の組み合わせでセリフが丸ごと欠落することがあるため、decoding を Beam 探索（`beam_size=5`）に変更し、チャンク間の `overlap_duration` を15秒から30秒に拡大している（詳細は ADR 0006）
 - Parakeet 経路では、1セグメントの表示時間が `MAX_SEGMENT_DURATION`（既定7秒）を超える場合、セグメント中央部（先頭・末尾から25%を除いた範囲）でトークン間ギャップが最大となる位置＝息継ぎで再帰的に分割する。Parakeet は息継ぎのない長い一文をそのまま1セグメントとして出力するため（実測: ナレーションで24秒）、この分割を行わないと字幕1枚が長時間表示され続ける
 
 ## 進捗表示
