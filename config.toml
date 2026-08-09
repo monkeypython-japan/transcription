@@ -3,8 +3,9 @@
 
 [models]
 # 音声認識エンジン（"parakeet" | "whisper"）
-# "whisper" にすると parakeet-mlx 導入前の挙動（常に mlx-whisper を使用）に戻る
-asr_engine = "parakeet"
+# 既定は "whisper"（精度優先。詳細は ADR 0007）。"parakeet" にすると
+# 無音区間のハルシネーションが起きにくく高速な Parakeet 経路に切り替わる
+asr_engine = "whisper"
 
 # 音声認識モデル（mlx-whisper。asr_engine="whisper" のとき、または
 # asr_engine="parakeet" で Parakeet 非対応言語・言語未指定のときに使用）

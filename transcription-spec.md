@@ -2,7 +2,7 @@
 
 ## プロジェクトの目的
 
-動画の音声をオフラインで認識し、SRT ファイルとして書き出すソフトウェアを開発する。音声認識には mlx-whisper（Whisper large モデル）と Parakeet（parakeet-mlx）を設定で切り替えられるハイブリッド構成を採用する（既定は Parakeet。使い分けは「音声認識エンジン」を参照）。
+動画の音声をオフラインで認識し、SRT ファイルとして書き出すソフトウェアを開発する。音声認識には mlx-whisper（Whisper large モデル）と Parakeet（parakeet-mlx）を設定で切り替えられるハイブリッド構成を採用する（既定は Whisper。使い分けは「音声認識エンジン」を参照）。
 
 ## 実行方法
 
@@ -75,15 +75,17 @@ transcription.py <動画ファイル|フォルダ>... [言語コード] [オプ�
 
 ## 音声認識エンジン
 
-音声認識には Parakeet（parakeet-mlx）と Whisper（mlx-whisper）の2エンジンを使い分けるハイブリッド構成を採用する。エンジン選択は `config.toml` の `asr_engine`（既定 `"parakeet"`）で制御する。
+音声認識には Parakeet（parakeet-mlx）と Whisper（mlx-whisper）の2エンジンを使い分けるハイブリッド構成を採用する。エンジン選択は `config.toml` の `asr_engine`（既定 `"whisper"`）で制御する。
 
-- `asr_engine = "whisper"`: 常に Whisper を使用する
-- `asr_engine = "parakeet"`（既定）: 以下の振り分けに従う
+- `asr_engine = "whisper"`（既定）: 常に Whisper を使用する
+- `asr_engine = "parakeet"`: 以下の振り分けに従う
   - 言語コードを指定し、それが Parakeet 対応言語（欧州25言語、`parakeet_languages` で定義）に含まれる → Parakeet
   - 言語コードを指定したが Parakeet 非対応言語（日本語・中国語・韓国語等） → Whisper
   - 言語コード未指定 → Whisper（Parakeet に言語自動検出機能が無いため）
 
 Parakeet は Whisper と比べて無音区間でのハルシネーション（存在しない発話の捏造）が起きにくく、認識速度も速い一方、対応言語が欧州25言語に限られ言語自動検出も持たない。詳細な実測値・判断根拠は [[docs/decisions/0005-音声認識エンジンをparakeetへ切り替える.md|ADR 0005]] を参照。
+
+長尺の実コンテンツ（90分ドラマ）で比較したところ、セリフ欠落対策（[[docs/decisions/0006-parakeetのセリフ欠落対策としてbeam探索とoverlap拡大を導入.md|ADR 0006]]）を施した後の Parakeet でもなお Whisper よりセリフの欠落が多いことが実測された。精度（欠落の少なさ）を優先し、既定エンジンを Whisper に変更した。詳細な判断根拠は [[docs/decisions/0007-既定のasrエンジンをwhisperに戻す.md|ADR 0007]] を参照。
 
 音声認識を実行した際は、実際に使用したエンジン名（フォールバック後の実値）を標準エラー出力に `[transcription] asr_engine=parakeet` または `[transcription] asr_engine=whisper` の形式で1行出力する。標準出力（SRT本体・進捗表示）には影響しない。呼び出し元（subtitle-translation 等）がサブプロセスの標準エラー出力からこの行を読み取り、実際に使われたエンジン名をログに反映するためのインターフェース。
 

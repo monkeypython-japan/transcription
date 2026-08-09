@@ -183,7 +183,19 @@ def test_trailing_punctuation_attaches_to_last_segment_after_split():
 
 # --- 4. エンジン振り分け ------------------------------------------------
 
-def test_dispatch_uses_parakeet_for_supported_language(capsys):
+def _force_engine(monkeypatch, engine):
+    """asr_engine 設定値を既定に関わらず強制する(既定値変更の影響を受けないテスト用)"""
+    def fake_get(section, key):
+        if section == "models" and key == "asr_engine":
+            return engine
+        return config._DEFAULTS[section][key]
+
+    monkeypatch.setattr(config, "get", fake_get)
+
+
+def test_dispatch_uses_parakeet_for_supported_language(monkeypatch, capsys):
+    _force_engine(monkeypatch, "parakeet")
+
     with patch.object(asr_parakeet, "transcribe", return_value=("srt", "fr")) as mock_p, \
          patch.object(asr_whisper, "transcribe") as mock_w:
         result = dispatcher.transcribe("dummy.mp4", language="fr")
@@ -197,7 +209,10 @@ def test_dispatch_uses_parakeet_for_supported_language(capsys):
     assert "[transcription] asr_engine=parakeet" in captured.err
 
 
-def test_dispatch_uses_whisper_for_unsupported_language(capsys):
+def test_dispatch_uses_whisper_for_unsupported_language(monkeypatch, capsys):
+    """asr_engine="parakeet" 設定時、Parakeet 非対応言語は Whisper にフォールバックする"""
+    _force_engine(monkeypatch, "parakeet")
+
     with patch.object(asr_parakeet, "transcribe") as mock_p, \
          patch.object(asr_whisper, "transcribe", return_value=("srt", "ja")) as mock_w:
         result = dispatcher.transcribe("dummy.mp4", language="ja")
@@ -211,7 +226,11 @@ def test_dispatch_uses_whisper_for_unsupported_language(capsys):
     assert "[transcription] asr_engine=whisper" in captured.err
 
 
-def test_dispatch_uses_whisper_when_language_unspecified(capsys):
+def test_dispatch_uses_whisper_when_language_unspecified(monkeypatch, capsys):
+    """asr_engine="parakeet" 設定時も、言語未指定なら Whisper を使う
+    (Parakeet に言語自動検出機能が無いため)"""
+    _force_engine(monkeypatch, "parakeet")
+
     with patch.object(asr_parakeet, "transcribe") as mock_p, \
          patch.object(asr_whisper, "transcribe", return_value=("srt", "en")) as mock_w:
         result = dispatcher.transcribe("dummy.mp4", language=None)
@@ -227,12 +246,7 @@ def test_dispatch_uses_whisper_when_language_unspecified(capsys):
 
 def test_dispatch_forced_whisper_engine_ignores_supported_language(monkeypatch, capsys):
     """asr_engine="whisper" のときは Parakeet 対応言語を指定しても常に Whisper を使う"""
-    def fake_get(section, key):
-        if section == "models" and key == "asr_engine":
-            return "whisper"
-        return config._DEFAULTS[section][key]
-
-    monkeypatch.setattr(config, "get", fake_get)
+    _force_engine(monkeypatch, "whisper")
 
     with patch.object(asr_parakeet, "transcribe") as mock_p, \
          patch.object(asr_whisper, "transcribe", return_value=("srt", "fr")) as mock_w:
@@ -251,9 +265,11 @@ def test_dispatch_forced_whisper_engine_ignores_supported_language(monkeypatch, 
 
 # --- 4.5 エンジン振り分け: 標準エラー出力フォーマットの厳密検証 -------------
 
-def test_dispatch_logs_exact_stderr_format_for_parakeet(capsys):
+def test_dispatch_logs_exact_stderr_format_for_parakeet(monkeypatch, capsys):
     """呼び出し元(st)がパースする固定フォーマットの行そのものを厳密検証する。
     標準出力には一切書き込まれないこと(既存の出力パース互換のため)も確認する。"""
+    _force_engine(monkeypatch, "parakeet")
+
     with patch.object(asr_parakeet, "transcribe", return_value=("srt", "en")), \
          patch.object(asr_whisper, "transcribe"):
         dispatcher.transcribe("dummy.mp4", language="en")
@@ -287,7 +303,9 @@ def test_return_type_contract_whisper_path():
     assert isinstance(result[1], str)
 
 
-def test_return_type_contract_parakeet_path():
+def test_return_type_contract_parakeet_path(monkeypatch):
+    _force_engine(monkeypatch, "parakeet")
+
     with patch.object(asr_parakeet, "transcribe", return_value=("srt text", "fr")):
         result = dispatcher.transcribe("dummy.mp4", language="fr")
 
