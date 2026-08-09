@@ -51,6 +51,8 @@ python transcription.py "<動画ファイル>"
 
 音声認識し、検出した言語の SRT を出力します。使用エンジンは言語に応じて自動的に振り分けられます（Parakeet 対応言語を明示指定 → Parakeet、それ以外（日本語など）や言語未指定 → Whisper。`config.toml` の `asr_engine` で常に Whisper に固定することも可能）。
 
+音声認識を実行すると、実際に使用したエンジン名（フォールバック後の実値）を標準エラー出力に `[transcription] asr_engine=parakeet` / `[transcription] asr_engine=whisper` の形式で1行出力します（標準出力には影響しません）。呼び出し元がログにエンジン名を反映する用途を想定したインターフェースです。
+
 ### 字幕トラックの確認
 
 ```bash

@@ -183,7 +183,7 @@ def test_trailing_punctuation_attaches_to_last_segment_after_split():
 
 # --- 4. エンジン振り分け ------------------------------------------------
 
-def test_dispatch_uses_parakeet_for_supported_language():
+def test_dispatch_uses_parakeet_for_supported_language(capsys):
     with patch.object(asr_parakeet, "transcribe", return_value=("srt", "fr")) as mock_p, \
          patch.object(asr_whisper, "transcribe") as mock_w:
         result = dispatcher.transcribe("dummy.mp4", language="fr")
@@ -192,8 +192,12 @@ def test_dispatch_uses_parakeet_for_supported_language():
     mock_p.assert_called_once_with("dummy.mp4", language="fr")
     mock_w.assert_not_called()
 
+    captured = capsys.readouterr()
+    assert captured.out == ""
+    assert "[transcription] asr_engine=parakeet" in captured.err
 
-def test_dispatch_uses_whisper_for_unsupported_language():
+
+def test_dispatch_uses_whisper_for_unsupported_language(capsys):
     with patch.object(asr_parakeet, "transcribe") as mock_p, \
          patch.object(asr_whisper, "transcribe", return_value=("srt", "ja")) as mock_w:
         result = dispatcher.transcribe("dummy.mp4", language="ja")
@@ -202,8 +206,12 @@ def test_dispatch_uses_whisper_for_unsupported_language():
     mock_w.assert_called_once_with("dummy.mp4", language="ja")
     mock_p.assert_not_called()
 
+    captured = capsys.readouterr()
+    assert captured.out == ""
+    assert "[transcription] asr_engine=whisper" in captured.err
 
-def test_dispatch_uses_whisper_when_language_unspecified():
+
+def test_dispatch_uses_whisper_when_language_unspecified(capsys):
     with patch.object(asr_parakeet, "transcribe") as mock_p, \
          patch.object(asr_whisper, "transcribe", return_value=("srt", "en")) as mock_w:
         result = dispatcher.transcribe("dummy.mp4", language=None)
@@ -212,8 +220,12 @@ def test_dispatch_uses_whisper_when_language_unspecified():
     mock_w.assert_called_once_with("dummy.mp4", language=None)
     mock_p.assert_not_called()
 
+    captured = capsys.readouterr()
+    assert captured.out == ""
+    assert "[transcription] asr_engine=whisper" in captured.err
 
-def test_dispatch_forced_whisper_engine_ignores_supported_language(monkeypatch):
+
+def test_dispatch_forced_whisper_engine_ignores_supported_language(monkeypatch, capsys):
     """asr_engine="whisper" のときは Parakeet 対応言語を指定しても常に Whisper を使う"""
     def fake_get(section, key):
         if section == "models" and key == "asr_engine":
@@ -229,6 +241,38 @@ def test_dispatch_forced_whisper_engine_ignores_supported_language(monkeypatch):
     assert result == ("srt", "fr")
     mock_w.assert_called_once_with("dummy.mp4", language="fr")
     mock_p.assert_not_called()
+
+    captured = capsys.readouterr()
+    assert captured.out == ""
+    # asr_engine="whisper" 設定時は Parakeet 対応言語でもフォールバックではなく
+    # 常時 whisper。実際に呼ばれたのが whisper であることが出力に反映される。
+    assert "[transcription] asr_engine=whisper" in captured.err
+
+
+# --- 4.5 エンジン振り分け: 標準エラー出力フォーマットの厳密検証 -------------
+
+def test_dispatch_logs_exact_stderr_format_for_parakeet(capsys):
+    """呼び出し元(st)がパースする固定フォーマットの行そのものを厳密検証する。
+    標準出力には一切書き込まれないこと(既存の出力パース互換のため)も確認する。"""
+    with patch.object(asr_parakeet, "transcribe", return_value=("srt", "en")), \
+         patch.object(asr_whisper, "transcribe"):
+        dispatcher.transcribe("dummy.mp4", language="en")
+
+    captured = capsys.readouterr()
+    assert captured.out == ""
+    assert captured.err == "[transcription] asr_engine=parakeet\n"
+
+
+def test_dispatch_logs_exact_stderr_format_for_whisper_fallback(capsys):
+    """非対応言語(ja)指定時、asr_engine 設定は "parakeet" のままでも実際に
+    使われたのは whisper であることが出力に反映される(フォールバック後の実値)。"""
+    with patch.object(asr_parakeet, "transcribe"), \
+         patch.object(asr_whisper, "transcribe", return_value=("srt", "ja")):
+        dispatcher.transcribe("dummy.mp4", language="ja")
+
+    captured = capsys.readouterr()
+    assert captured.out == ""
+    assert captured.err == "[transcription] asr_engine=whisper\n"
 
 
 # --- 5. 戻り値契約: いずれの経路でも (str, str) が返る ----------------------
