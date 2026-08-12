@@ -10,6 +10,16 @@
           }
         ]
       }
+    ],
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "p=\"$(basename \"$CLAUDE_PROJECT_DIR\")\"; d=\"$CLAUDE_PROJECT_DIR/../video-translation/docs/directives.md\"; [ -f \"$d\" ] || exit 0; n=$(grep -c \"^- \\[ \\] .*\\*\\*${p}\\*\\*\" \"$d\" 2>/dev/null || true); [ \"${n:-0}\" -gt 0 ] && { echo \"統括から${n}件の申し送りがあります。内容をユーザーに提示し、判断を仰いでください（このファイルは書き換えない。詳しい回答は相談ノート末尾を参照）:\"; grep \"^- \\[ \\] .*\\*\\*${p}\\*\\*\" \"$d\"; }; exit 0"
+          }
+        ]
+      }
     ]
   }
 }
