@@ -3,6 +3,7 @@ status: accepted
 date: 2026-08-09
 tags:
   - project/transcription
+modified: 2026-08-10
 ---
 
 # 0007. 既定の ASR エンジンを Whisper に戻す

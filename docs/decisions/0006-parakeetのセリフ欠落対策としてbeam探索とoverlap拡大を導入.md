@@ -3,6 +3,7 @@ status: accepted
 date: 2026-08-09
 tags:
   - project/transcription
+modified: 2026-08-10
 ---
 
 # 0006. Parakeet のセリフ欠落対策として Beam 探索と overlap 拡大を導入する

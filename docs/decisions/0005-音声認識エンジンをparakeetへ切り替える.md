@@ -3,7 +3,7 @@ status: accepted
 date: 2026-08
 tags:
   - project/whisperai
-modified: 2026-08-07
+modified: 2026-08-10
 ---
 
 # 0005. 音声認識エンジンを Parakeet 対応のハイブリッド構成にする
